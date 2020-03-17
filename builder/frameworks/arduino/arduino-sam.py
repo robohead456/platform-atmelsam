@@ -1,4 +1,4 @@
-# Copyright 2020-present PlatformIO <contact@platformio.org>
+# Copyright 2014-present PlatformIO <contact@platformio.org>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 
-from os.path import isdir, join
+import os
 
 from SCons.Script import DefaultEnvironment
 
@@ -30,21 +30,23 @@ env = DefaultEnvironment()
 platform = env.PioPlatform()
 board = env.BoardConfig()
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-sam")
+framework_package = "framework-arduino-sam"
 if board.get("build.core", "").lower() != "arduino":
-    FRAMEWORK_DIR += "-%s" % board.get("build.core")
-SYSTEM_DIR = join(FRAMEWORK_DIR, "system")
+    framework_package += "-%s" % board.get("build.core").lower()
+FRAMEWORK_DIR = platform.get_package_dir(framework_package)
 
-assert isdir(SYSTEM_DIR)
-assert isdir(FRAMEWORK_DIR)
+SYSTEM_DIR = os.path.join(FRAMEWORK_DIR, "system")
+
+assert os.path.isdir(SYSTEM_DIR)
+assert os.path.isdir(FRAMEWORK_DIR)
 
 env.SConscript("arduino-common.py")
 
 env.Append(
     CPPPATH=[
-        join(SYSTEM_DIR, "libsam"),
-        join(SYSTEM_DIR, "CMSIS", "CMSIS", "Include"),
-        join(SYSTEM_DIR, "CMSIS", "Device", "ATMEL")
+        os.path.join(SYSTEM_DIR, "libsam"),
+        os.path.join(SYSTEM_DIR, "CMSIS", "CMSIS", "Include"),
+        os.path.join(SYSTEM_DIR, "CMSIS", "Device", "ATMEL")
     ],
 
     LINKFLAGS=[
@@ -68,26 +70,26 @@ env.Append(
 libs = []
 
 if "build.variant" in board:
-    variants_dir = join(
+    variants_dir = os.path.join(
         "$PROJECT_DIR", board.get("build.variants_dir")) if board.get(
-            "build.variants_dir", "") else join(FRAMEWORK_DIR, "variants")
+            "build.variants_dir", "") else os.path.join(FRAMEWORK_DIR, "variants")
     env.Append(
         CPPPATH=[
-            join(variants_dir, board.get("build.variant"))
+            os.path.join(variants_dir, board.get("build.variant"))
         ],
 
         LIBPATH=[
-            join(variants_dir, board.get("build.variant"))
+            os.path.join(variants_dir, board.get("build.variant"))
         ],
     )
     libs.append(env.BuildLibrary(
-        join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        join(variants_dir, board.get("build.variant"))
+        os.path.join("$BUILD_DIR", "FrameworkArduinoVariant"),
+        os.path.join(variants_dir, board.get("build.variant"))
     ))
 
 libs.append(env.BuildLibrary(
-    join("$BUILD_DIR", "FrameworkArduino"),
-    join(FRAMEWORK_DIR, "cores", "arduino")
+    os.path.join("$BUILD_DIR", "FrameworkArduino"),
+    os.path.join(FRAMEWORK_DIR, "cores", "arduino")
 ))
 
 env.Prepend(LIBS=libs)

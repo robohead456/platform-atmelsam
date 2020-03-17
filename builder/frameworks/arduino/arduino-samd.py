@@ -1,4 +1,4 @@
-# Copyright 2020-present PlatformIO <contact@platformio.org>
+# Copyright 2014-present PlatformIO <contact@platformio.org>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 
-from os.path import isdir, join
+import os
 
 from SCons.Script import DefaultEnvironment
 
@@ -32,24 +32,25 @@ board = env.BoardConfig()
 
 BUILD_CORE = board.get("build.core", "").lower()
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-samd")
+framework_package = "framework-arduino-samd"
 if BUILD_CORE != "arduino":
-    FRAMEWORK_DIR += "-%s" % BUILD_CORE
+    framework_package += "-%s" % BUILD_CORE
+FRAMEWORK_DIR = platform.get_package_dir(framework_package)
 CMSIS_DIR = platform.get_package_dir("framework-cmsis")
 CMSIS_ATMEL_DIR = platform.get_package_dir("framework-cmsis-atmel")
 
-assert all(isdir(d) for d in (FRAMEWORK_DIR, CMSIS_DIR, CMSIS_ATMEL_DIR))
+assert all(os.path.isdir(d) for d in (FRAMEWORK_DIR, CMSIS_DIR, CMSIS_ATMEL_DIR))
 
 env.SConscript("arduino-common.py")
 
 env.Append(
     CPPPATH=[
-        join(CMSIS_DIR, "CMSIS", "Include"),
-        join(CMSIS_ATMEL_DIR, "CMSIS", "Device", "ATMEL")
+        os.path.join(CMSIS_DIR, "CMSIS", "Include"),
+        os.path.join(CMSIS_ATMEL_DIR, "CMSIS", "Device", "ATMEL")
     ],
 
     LIBPATH=[
-        join(CMSIS_DIR, "CMSIS", "Lib", "GCC"),
+        os.path.join(CMSIS_DIR, "CMSIS", "Lib", "GCC"),
     ],
 
     LINKFLAGS=[
@@ -88,10 +89,10 @@ if BUILD_CORE == "adafruit":
         ],
 
         CPPPATH=[
-            join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB"),
-            join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB",
+            os.path.join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB"),
+            os.path.join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB",
                  "Adafruit_TinyUSB_ArduinoCore"),
-            join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB",
+            os.path.join(FRAMEWORK_DIR, "cores", "arduino", "TinyUSB",
                  "Adafruit_TinyUSB_ArduinoCore", "tinyusb", "src")
         ]
     )
@@ -107,21 +108,21 @@ env.Append(
 libs = []
 
 if "build.variant" in board:
-    variants_dir = join(
+    variants_dir = os.path.join(
         "$PROJECT_DIR", board.get("build.variants_dir")) if board.get(
-            "build.variants_dir", "") else join(FRAMEWORK_DIR, "variants")
+            "build.variants_dir", "") else os.path.join(FRAMEWORK_DIR, "variants")
 
     env.Append(
-        CPPPATH=[join(variants_dir, board.get("build.variant"))]
+        CPPPATH=[os.path.join(variants_dir, board.get("build.variant"))]
     )
     libs.append(env.BuildLibrary(
-        join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        join(variants_dir, board.get("build.variant"))
+        os.path.join("$BUILD_DIR", "FrameworkArduinoVariant"),
+        os.path.join(variants_dir, board.get("build.variant"))
     ))
 
 libs.append(env.BuildLibrary(
-    join("$BUILD_DIR", "FrameworkArduino"),
-    join(FRAMEWORK_DIR, "cores", "arduino")
+    os.path.join("$BUILD_DIR", "FrameworkArduino"),
+    os.path.join(FRAMEWORK_DIR, "cores", "arduino")
 ))
 
 env.Prepend(LIBS=libs)

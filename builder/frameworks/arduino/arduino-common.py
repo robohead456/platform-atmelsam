@@ -1,4 +1,4 @@
-# Copyright 2020-present PlatformIO <contact@platformio.org>
+# Copyright 2014-present PlatformIO <contact@platformio.org>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 
-from os.path import isdir, join
+import os
 
 from SCons.Script import DefaultEnvironment
 
@@ -35,11 +35,12 @@ MCU_FAMILY = board.get(
     "build.system", "sam" if build_mcu.startswith("at91") else "samd")
 assert MCU_FAMILY in ("sam", "samd")
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduino-" + MCU_FAMILY)
+framework_package = "framework-arduino-" + MCU_FAMILY
 if board.get("build.core", "").lower() != "arduino":
-    FRAMEWORK_DIR += "-%s" % board.get("build.core")
+    framework_package += "-%s" % board.get("build.core").lower()
+FRAMEWORK_DIR = platform.get_package_dir(framework_package)
 
-assert isdir(FRAMEWORK_DIR)
+assert os.path.isdir(FRAMEWORK_DIR)
 
 env.Append(
     ASFLAGS=["-x", "assembler-with-cpp"],
@@ -73,11 +74,11 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "cores", "arduino")
+        os.path.join(FRAMEWORK_DIR, "cores", "arduino")
     ],
 
     LIBSOURCE_DIRS=[
-        join(FRAMEWORK_DIR, "libraries")
+        os.path.join(FRAMEWORK_DIR, "libraries")
     ],
 
     LINKFLAGS=[
@@ -94,14 +95,14 @@ env.Append(
     LIBS=["m"]
 )
 
-variants_dir = join(
+variants_dir = os.path.join(
     "$PROJECT_DIR", board.get("build.variants_dir")) if board.get(
-        "build.variants_dir", "") else join(FRAMEWORK_DIR, "variants")
+        "build.variants_dir", "") else os.path.join(FRAMEWORK_DIR, "variants")
 
 if not board.get("build.ldscript", ""):
     env.Append(
         LIBPATH=[
-            join(variants_dir, board.get("build.variant"), "linker_scripts", "gcc")
+            os.path.join(variants_dir, board.get("build.variant"), "linker_scripts", "gcc")
         ]
     )
     env.Replace(
